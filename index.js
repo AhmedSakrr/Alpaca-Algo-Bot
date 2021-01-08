@@ -1,12 +1,10 @@
 const _ = require('lodash');
 const Alpaca = require('@alpacahq/alpaca-trade-api');
-const SMA = require('technicalindicators').SMA;
-const RSI = require('technicalindicators').RSI;
-const MACD = require('technicalindicators').MACD;
 const ADX = require('technicalindicators').ADX;
 const MINUS_DI = require('technicalindicators').MDM;
 const PLUS_DI = require('technicalindicators').PDM;
 
+// set up paper trading API.
 const alpaca = new Alpaca({
   keyId: process.env.API_KEY,
   secretKey: process.env.SECRET_API_KEY,
@@ -14,46 +12,45 @@ const alpaca = new Alpaca({
   usePolygon: false
 });
 
-let sma20, sma50;
+// Declaring Variables.
 let lastOrder = 'SELL';
+let ADX14, adx, pdi, mdi;
+let close, high, low, period, input;
 
-async function initializeAverages() {
-    const initialData = await alpaca.getBars(
-      '1Min',
-      'SPY',
-      {
-        limit: 50,
-        until: new Date()
-      }
-    );
 
-    const closeValues = _.map(initialData.SPY, (bar) => bar.closePrice);
-
-/*
-let sma20, sma50;
-let lastOrder = 'SELL';
-
+// Get Stock Data
 async function initializeAverages() {
   const initialData = await alpaca.getBars(
-    '1Min',
-    'SPY',
+    '15Min',
+    'TSLA',
     {
-      limit: 50,
+      limit: 30,
       until: new Date()
     }
   );
+  
+  // get stock close, high, low, and period.
+  close = _.map(initialData.TSLA, (bar) => bar.closePrice);
+  high = _.map(initialData.TSLA, (bar) => bar.highPrice);
+  low = _.map(initialData.TSLA, (bar) => bar.lowPrice);
+  period = 14
+  input =  {close: close, high: high, low: low, period: period}
 
-  const closeValues = _.map(initialData.SPY, (bar) => bar.closePrice);
-
-  sma20 = new SMA({ period: 20, values: closeValues });
-  sma50 = new SMA({ period: 50, values: closeValues });
-
-  console.log(`sma20: ${sma20.getResult()}`);
-  console.log(`sma50: ${sma50.getResult()}`);
+  // organize ADX indicator
+  ADX14 = new ADX(input).getResult()
+  adx = ADX14[ADX14.length - 1]['adx']
+  pdi = ADX14[ADX14.length - 1]['pdi']
+  mdi = ADX14[ADX14.length - 1]['mdi']
+  console.log(ADX14)
+  console.log('adx: ' + adx);
+  console.log('pdi: ' + pdi);
+  console.log('mdi: ' + mdi);
 }
 
 initializeAverages();
 
+
+/*
 const client = alpaca.data_ws;
 
 client.onConnect(() => {
